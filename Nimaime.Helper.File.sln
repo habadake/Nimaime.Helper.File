@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.4.11620.152 stable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nimaime.Helper.File", "Nimaime.Helper.File.csproj", "{8054FE10-2188-96FF-549B-75C66F197929}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8054FE10-2188-96FF-549B-75C66F197929}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8054FE10-2188-96FF-549B-75C66F197929}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8054FE10-2188-96FF-549B-75C66F197929}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8054FE10-2188-96FF-549B-75C66F197929}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9BD16BBD-6F98-48EC-8FA0-7C3C5F622A1F}
+	EndGlobalSection
+EndGlobal
