@@ -5,8 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <PlatformTarget>x64</PlatformTarget>
-    <AssemblyVersion>0.7.13.9584</AssemblyVersion>
-    <FileVersion>0.7.13.9584</FileVersion>
+    <AssemblyVersion>0.7.22.9586</AssemblyVersion>
+    <FileVersion>0.7.22.9586</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
