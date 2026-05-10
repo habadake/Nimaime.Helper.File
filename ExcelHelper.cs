@@ -1,4 +1,5 @@
 ﻿using NPOI.SS.UserModel;
+using NPOI.SS.Util;
 using NPOI.XSSF.UserModel;
 using System;
 using System.Collections.Generic;
@@ -168,53 +169,140 @@ namespace Nimaime.Helper.File
 		}
 
 		/// <summary>
-		/// 将DataSet写入Excel文件
+		/// 将 DataSet 写入 Excel
 		/// </summary>
-		/// <param name="dataSet">数据集</param>
-		/// <param name="fileName">保存Excel路径</param>
 		public static void SaveDataSet2Excel(DataSet dataSet, string fileName)
 		{
-			if (!Directory.Exists(Path.GetDirectoryName(fileName)))
+			string? dir = Path.GetDirectoryName(fileName);
+
+			if (!string.IsNullOrWhiteSpace(dir) && !Directory.Exists(dir))
 			{
-				Directory.CreateDirectory(Path.GetDirectoryName(fileName));
+				Directory.CreateDirectory(dir);
 			}
 
 			IWorkbook workbook = new XSSFWorkbook();
 
-			foreach(DataTable dataTable in dataSet.Tables)
+			// ===== 表头样式 =====
+			ICellStyle headerStyle = workbook.CreateCellStyle();
+
+			IFont headerFont = workbook.CreateFont();
+			headerFont.IsBold = true;
+
+			headerStyle.SetFont(headerFont);
+			headerStyle.Alignment = HorizontalAlignment.Center;
+			headerStyle.VerticalAlignment = VerticalAlignment.Center;
+
+			foreach (DataTable dataTable in dataSet.Tables)
 			{
-				string tableName;
-				if (string.IsNullOrWhiteSpace(dataTable.TableName))
+				// Excel Sheet 名最长31字符
+				string tableName = string.IsNullOrWhiteSpace(dataTable.TableName)
+					? $"Sheet{workbook.NumberOfSheets + 1}"
+					: dataTable.TableName;
+
+				if (tableName.Length > 31)
 				{
-					tableName = "Sheet" + (workbook.NumberOfSheets + 1).ToString();
+					tableName = tableName[..31];
 				}
-				else
-				{
-					tableName = dataTable.TableName;
-				}
+
 				ISheet sheet = workbook.CreateSheet(tableName);
 
-				// Write column headers
+				// ===== 冻结首行 =====
+				sheet.CreateFreezePane(0, 1);
+
+				// ===== 创建表头 =====
 				IRow headerRow = sheet.CreateRow(0);
+
 				for (int colIndex = 0; colIndex < dataTable.Columns.Count; colIndex++)
 				{
+					DataColumn column = dataTable.Columns[colIndex];
+
 					ICell cell = headerRow.CreateCell(colIndex);
-					cell.SetCellValue(dataTable.Columns[colIndex].ColumnName);
+
+					cell.SetCellValue(column.ColumnName);
+					cell.CellStyle = headerStyle;
 				}
 
-				// Write data rows
+				// ===== 写入数据 =====
 				for (int rowIndex = 0; rowIndex < dataTable.Rows.Count; rowIndex++)
 				{
-					IRow dataRow = sheet.CreateRow(rowIndex + 1);
+					DataRow dr = dataTable.Rows[rowIndex];
+
+					IRow row = sheet.CreateRow(rowIndex + 1);
+
 					for (int colIndex = 0; colIndex < dataTable.Columns.Count; colIndex++)
 					{
-						ICell cell = dataRow.CreateCell(colIndex);
-						cell.SetCellValue(dataTable.Rows[rowIndex][colIndex].ToString());
+						object? value = dr[colIndex];
+
+						ICell cell = row.CreateCell(colIndex);
+
+						if (value == DBNull.Value || value == null)
+						{
+							cell.SetCellValue(string.Empty);
+							continue;
+						}
+
+						// ===== 类型识别 =====
+						switch (Type.GetTypeCode(value.GetType()))
+						{
+							case TypeCode.Boolean:
+								cell.SetCellValue((bool)value);
+								break;
+
+							case TypeCode.Byte:
+							case TypeCode.SByte:
+							case TypeCode.Int16:
+							case TypeCode.UInt16:
+							case TypeCode.Int32:
+							case TypeCode.UInt32:
+							case TypeCode.Int64:
+							case TypeCode.UInt64:
+							case TypeCode.Decimal:
+							case TypeCode.Double:
+							case TypeCode.Single:
+								cell.SetCellValue(Convert.ToDouble(value));
+								break;
+
+							case TypeCode.DateTime:
+								cell.SetCellValue((DateTime)value);
+								break;
+
+							default:
+								cell.SetCellValue(value.ToString());
+								break;
+						}
 					}
+				}
+
+				// ===== 自动筛选 =====
+				sheet.SetAutoFilter(new CellRangeAddress(
+					0,
+					dataTable.Rows.Count,
+					0,
+					dataTable.Columns.Count - 1));
+
+				// ===== 自动列宽 =====
+				for (int i = 0; i < dataTable.Columns.Count; i++)
+				{
+					sheet.AutoSizeColumn(i);
+
+					// 防止列宽过窄
+					int width = (int)sheet.GetColumnWidth(i);
+
+					// 增加一点边距
+					width += 1024;
+
+					// Excel 最大列宽限制
+					if (width > 255 * 256)
+					{
+						width = 255 * 256;
+					}
+
+					sheet.SetColumnWidth(i, width);
 				}
 			}
 
 			using FileStream fs = new(fileName, FileMode.Create, FileAccess.Write);
+
 			workbook.Write(fs);
 		}
 
